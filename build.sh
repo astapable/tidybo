@@ -5,7 +5,9 @@ cd "$(dirname "$0")"
 
 APP=build/Tidybo.app
 BUNDLE_ID=app.tidybo.Tidybo
-LOG=build/run.log
+# Log outside the project: ~/Documents and ~/Desktop are privacy-protected, and macOS refuses to
+# launch an app whose output is redirected there.
+LOG="$HOME/Library/Logs/Tidybo/run.log"
 
 # Stable identity keeps the Accessibility grant across rebuilds.
 # Falls back to ad-hoc (grant may need re-approval after each build).
@@ -35,11 +37,16 @@ touch "$APP"
 
 pkill -x Tidybo 2>/dev/null || true
 while pgrep -x Tidybo >/dev/null; do sleep 0.1; done
+mkdir -p "$(dirname "$LOG")"
 : > "$LOG"
 # Launch via LaunchServices so the app (not the terminal) is the TCC-responsible process.
 # LaunchServices may still be tearing down the old instance (error -600): retry briefly.
 for i in 1 2 3 4 5; do
     sleep 0.4
-    open --stdout "$LOG" --stderr "$LOG" "$APP" 2>/dev/null && break
+    if open --stdout "$LOG" --stderr "$LOG" "$APP" 2>/dev/null; then
+        echo "Launched. Log: $LOG  (tail -f it)"
+        exit 0
+    fi
 done
-echo "Launched. Log: $PWD/$LOG  (tail -f it)"
+echo "Could not launch $APP (see: open \"$APP\")" >&2
+exit 1
