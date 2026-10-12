@@ -1,0 +1,14 @@
+# Build output (app bundle, generated icon, run log)
+build/
+
+# Compiled helper
+Tools/axdump
+
+# macOS
+.DS_Store
+
+# Release builds
+dist/
+
+# Downloaded release assets
+release-v0.1/
